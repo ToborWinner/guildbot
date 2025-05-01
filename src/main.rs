@@ -3,7 +3,7 @@ use guildbot::{
     shard_runner, SHUTDOWN,
 };
 use std::{env, error::Error, path::PathBuf, str::FromStr, sync::atomic::Ordering};
-use tokio::signal;
+use tokio::signal::unix::{signal, SignalKind};
 use twilight_gateway::{CloseFrame, Config, Intents};
 use twilight_http::Client as HttpClient;
 
@@ -67,7 +67,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         tasks.push(tokio::spawn(shard_runner(shard, botconfig.clone())));
     }
 
-    signal::ctrl_c().await?;
+    let mut term = signal(SignalKind::terminate())?;
+    tokio::select! {
+        _ = term.recv() => {
+            tracing::info!("Received SIGTERM. Shutting down.");
+        }
+        _ = tokio::signal::ctrl_c() => {
+            tracing::info!("Received Ctrl+C (SIGINT). Shutting down.");
+        }
+    }
+
     SHUTDOWN.store(true, Ordering::Relaxed);
     for sender in senders {
         // Ignore error if shard's already shutdown.
