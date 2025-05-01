@@ -132,6 +132,16 @@ pub async fn get_linked_users_by_uuids(
     Ok(users.filter(uuid.eq_any(uuids)).load(&mut con).await?)
 }
 
+pub async fn get_linked_users(
+    pool: &Pool,
+) -> Result<Vec<User>, DatabaseError> {
+    use crate::schema::users::dsl::*;
+
+    let mut con = pool.get().await?;
+
+    Ok(users.load(&mut con).await?)
+}
+
 pub async fn get_linked_users_by_ids(
     pool: &Pool,
     ids: Vec<i64>,

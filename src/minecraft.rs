@@ -13,7 +13,7 @@ use twilight_model::{
 
 use crate::{
     database::{
-        get_linked_users_by_ids, get_linked_users_by_uuids, update_linked_user, DatabaseError,
+        get_linked_users_by_ids, update_linked_user, DatabaseError,
     },
     ShardData,
 };
@@ -361,14 +361,14 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
         guilds.push((guild, data.hypixel.get_guild(&guild.name).await?.members));
     }
 
-    let list_of_uuids: Vec<&String> = guilds
-        .iter()
-        .flat_map(|(_, v)| v.iter())
-        .map(|x| &x.uuid)
-        .collect();
-    let linked_users = get_linked_users_by_uuids(&data.pool, list_of_uuids).await?;
-
     let guild_members: Vec<Member> = get_guild_members(data).await?;
+
+    let list_of_uuids = guild_members
+        .iter()
+        .filter(|x| x.user.id.get() <= i64::MAX as u64)
+        .map(|x| x.user.id.get() as i64)
+        .collect();
+    let linked_users = get_linked_users_by_ids(&data.pool, list_of_uuids).await?;
 
     let mut updates = Vec::new();
 

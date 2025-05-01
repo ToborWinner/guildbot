@@ -1865,4 +1865,4 @@ macro_rules! no_req {
     };
 }
 
-include_commands!(updateloop forcelink link linked unlink masslink dryupdate sendverification);
+include_commands!(updateloop forceupdate forcelink link linked unlink masslink dryupdate sendverification);
