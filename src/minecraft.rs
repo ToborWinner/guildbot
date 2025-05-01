@@ -407,11 +407,12 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
                 .iter()
                 .find_map(|(g, m)| m.iter().find(|x| x.uuid == *uuid).map(|x| (x, *g)));
 
+            let all_roles = guilds.iter().flat_map(|(g, _)| g.ranks.values());
+
             if let Some((guild_member, guild_config)) = guild_data {
                 to_add.push(guild_config.role);
                 to_remove.push(data.config.guest_role_id);
                 let role = guild_config.ranks.get(&guild_member.rank);
-                let all_roles = guild_config.ranks.values();
                 if let Some(role) = role {
                     to_add.push(*role);
                     to_remove.extend(all_roles.filter(|x| **x != *role));
@@ -420,6 +421,7 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
                 }
             } else {
                 to_add.push(data.config.guest_role_id);
+                to_remove.extend(all_roles)
             }
         } else {
             to_remove.reserve(guilds.len() + 1);
