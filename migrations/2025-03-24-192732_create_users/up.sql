@@ -1,0 +1,5 @@
+CREATE TABLE users (
+  id BIGINT PRIMARY KEY,
+  ign VARCHAR NULL,
+  uuid VARCHAR NULL
+)

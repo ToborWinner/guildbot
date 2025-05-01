@@ -1,0 +1,21 @@
+{
+  "token": "",
+  "database_url": "",
+  "api_key": "",
+
+  "guild_id": 123,
+  "verified_role_id": 123,
+  "nick_bypass_role": 123,
+  "notification_channel": 123,
+  "notification_mention": "",
+  "no_permission": 123,
+  "guilds": [
+    {
+      "name": "",
+      "role": 123,
+      "ranks": {
+        "rank1": 123
+      }
+    }
+  ]
+}
