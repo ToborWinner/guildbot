@@ -11,9 +11,9 @@ pub struct BotConfig {
     pub token: String,
     pub database_url: String,
     pub api_key: String,
-
     pub guild_id: Id<GuildMarker>,
     pub verified_role_id: Id<RoleMarker>,
+    pub guest_role_id: Id<RoleMarker>,
     pub nick_bypass_role: Id<RoleMarker>,
     pub notification_channel: Id<ChannelMarker>,
     pub notification_mention: String,
