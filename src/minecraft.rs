@@ -555,13 +555,21 @@ pub async fn update_loop(data: Arc<ShardData>) {
             .await;
             continue;
         }
-        if let Err(e) = update_users(&data).await {
-            tracing::error!("Error while updating members: {}", e);
-            send_notification(
-                &data,
-                "there was an error in the update loop while updating members.",
-            )
-            .await;
+        for i in 0..4 {
+            if data.paused_loop.load(std::sync::atomic::Ordering::SeqCst) {
+                continue;
+            }
+            if let Err(e) = update_users(&data).await {
+                tracing::error!("Error while updating members: {}", e);
+                send_notification(
+                    &data,
+                    "there was an error in the update loop while updating members.",
+                )
+                .await;
+            }
+            if i != 3 {
+                tokio::time::sleep(Duration::from_secs(1800)).await;
+            }
         }
     }
 }
