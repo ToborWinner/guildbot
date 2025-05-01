@@ -424,8 +424,9 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
                 to_remove.extend(all_roles)
             }
         } else {
-            to_remove.reserve(guilds.len() + 1);
+            to_remove.reserve(guilds.len() + 2);
             to_remove.extend(guilds.iter().map(|(c, _)| c.role));
+            to_remove.push(data.config.guest_role_id);
             to_remove.push(data.config.verified_role_id);
             to_remove.extend(all_roles)
         }
