@@ -381,6 +381,8 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
         let mut to_add = Vec::new();
         let mut new_nick: Option<String> = None;
 
+        let all_roles = guilds.iter().flat_map(|(g, _)| g.ranks.values());
+
         if let Some(dbuser) = linked {
             let uuid = dbuser
                 .uuid
@@ -407,8 +409,6 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
                 .iter()
                 .find_map(|(g, m)| m.iter().find(|x| x.uuid == *uuid).map(|x| (x, *g)));
 
-            let all_roles = guilds.iter().flat_map(|(g, _)| g.ranks.values());
-
             if let Some((guild_member, guild_config)) = guild_data {
                 to_add.push(guild_config.role);
                 to_remove.push(data.config.guest_role_id);
@@ -427,6 +427,7 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
             to_remove.reserve(guilds.len() + 1);
             to_remove.extend(guilds.iter().map(|(c, _)| c.role));
             to_remove.push(data.config.verified_role_id);
+            to_remove.extend(all_roles)
         }
 
         let added: Vec<Id<RoleMarker>> = to_add
