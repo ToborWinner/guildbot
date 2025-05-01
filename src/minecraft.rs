@@ -557,7 +557,7 @@ pub async fn update_loop(data: Arc<ShardData>) {
         }
         for i in 0..4 {
             if data.paused_loop.load(std::sync::atomic::Ordering::SeqCst) {
-                continue;
+                break;
             }
             if let Err(e) = update_users(&data).await {
                 tracing::error!("Error while updating members: {}", e);
