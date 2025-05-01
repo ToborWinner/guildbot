@@ -361,7 +361,11 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
         guilds.push((guild, data.hypixel.get_guild(&guild.name).await?.members));
     }
 
-    let list_of_uuids: Vec<&String> = guilds.iter().flat_map(|(_, v)| v.iter()).map(|x| &x.uuid).collect();
+    let list_of_uuids: Vec<&String> = guilds
+        .iter()
+        .flat_map(|(_, v)| v.iter())
+        .map(|x| &x.uuid)
+        .collect();
     let linked_users = get_linked_users_by_uuids(&data.pool, list_of_uuids).await?;
 
     let guild_members: Vec<Member> = get_guild_members(data).await?;
@@ -388,7 +392,10 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
                 .ok_or(UpdateRolesError::InvalidDbUser(dbuser.id))?;
 
             to_add.push(data.config.verified_role_id);
-            if member.roles.iter().all(|x| *x != data.config.nick_bypass_role)
+            if member
+                .roles
+                .iter()
+                .all(|x| *x != data.config.nick_bypass_role)
                 && ((member.nick.is_some() && member.nick.as_ref().unwrap() != ign)
                     || (member.nick.is_none()
                         && member.user.global_name.unwrap_or(member.user.name) != *ign))
@@ -396,8 +403,9 @@ pub async fn get_updates(data: &ShardData) -> Result<Vec<MemberUpdate>, UpdateRo
                 new_nick = Some(ign.clone());
             }
 
-            let data = guilds.iter().find_map(|(g, m)| m.iter().find(|x| x.uuid == *uuid).map(|x| (x, *g)));
-
+            let data = guilds
+                .iter()
+                .find_map(|(g, m)| m.iter().find(|x| x.uuid == *uuid).map(|x| (x, *g)));
 
             if let Some((guild_member, guild_config)) = data {
                 to_add.push(guild_config.role);
@@ -569,7 +577,9 @@ pub async fn update_igns(data: &ShardData) -> Result<(), UpdateIgnsError> {
         &data.pool,
         guild_members
             .into_iter()
-            .filter(|x| x.user.id.get() < i64::MAX as u64 && x.roles.contains(&data.config.verified_role_id))
+            .filter(|x| {
+                x.user.id.get() < i64::MAX as u64 && x.roles.contains(&data.config.verified_role_id)
+            })
             .map(|x| x.user.id.get() as i64)
             .collect(),
     )
@@ -606,7 +616,9 @@ pub async fn update_users(data: &ShardData) -> Result<(), UpdateUsersError> {
             continue;
         }
         tracing::info!("Updating member {}.", update.id);
-        let mut req = data.client.update_guild_member(data.config.guild_id, update.id);
+        let mut req = data
+            .client
+            .update_guild_member(data.config.guild_id, update.id);
         if let Some(nick) = &update.nick {
             if update.id != data.config.no_permission {
                 req = req.nick(Some(nick));
@@ -628,7 +640,10 @@ pub async fn send_notification(data: &ShardData, notification: &str) {
     _ = data
         .client
         .create_message(data.config.notification_channel)
-        .content(&format!["{}, {}", data.config.notification_mention, notification])
+        .content(&format![
+            "{}, {}",
+            data.config.notification_mention, notification
+        ])
         .await;
 }
 

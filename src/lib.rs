@@ -20,8 +20,8 @@ use twilight_model::gateway::{
 };
 
 pub mod commands;
-pub mod database;
 pub mod config;
+pub mod database;
 mod minecraft;
 pub mod models;
 pub mod schema;
@@ -42,12 +42,7 @@ pub struct ShardData {
 }
 
 impl ShardData {
-    pub fn new(
-        client: Client,
-        cache: InMemoryCache,
-        pool: Pool,
-        config: BotConfig,
-    ) -> Self {
+    pub fn new(client: Client, cache: InMemoryCache, pool: Pool, config: BotConfig) -> Self {
         let reqwest_client = reqwest::Client::new();
         Self {
             client,
@@ -61,9 +56,7 @@ impl ShardData {
         }
     }
 
-    pub async fn create(
-        config: BotConfig,
-    ) -> Result<Self, PoolCreationError> {
+    pub async fn create(config: BotConfig) -> Result<Self, PoolCreationError> {
         let client = Client::new(config.token.clone());
         let cache = DefaultInMemoryCache::builder()
             .resource_types(ResourceType::MESSAGE)
@@ -84,10 +77,7 @@ impl ShardData {
     }
 }
 
-pub async fn shard_runner(
-    mut shard: Shard,
-    config: BotConfig,
-) {
+pub async fn shard_runner(mut shard: Shard, config: BotConfig) {
     tracing::info!("({}) Starting shard...", shard.id().number());
 
     let shard_data = match ShardData::create(config).await {

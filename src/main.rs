@@ -1,4 +1,7 @@
-use guildbot::{commands::register_commands, config::BotConfig, database::setup_database, presence, shard_runner, SHUTDOWN};
+use guildbot::{
+    commands::register_commands, config::BotConfig, database::setup_database, presence,
+    shard_runner, SHUTDOWN,
+};
 use std::{env, error::Error, path::PathBuf, str::FromStr, sync::atomic::Ordering};
 use tokio::signal;
 use twilight_gateway::{CloseFrame, Config, Intents};
@@ -17,11 +20,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             let mut path = PathBuf::from_str(&creddir)?;
             path.push("config.json");
             path
-        },
-        Err(env::VarError::NotPresent) => {
-            "config.json".into()
         }
-        Err(x) => return Err(x.into())
+        Err(env::VarError::NotPresent) => "config.json".into(),
+        Err(x) => return Err(x.into()),
     })?;
 
     // Setup database if it's not already in the correct state
@@ -63,10 +64,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     for shard in shards {
         senders.push(shard.sender());
-        tasks.push(tokio::spawn(shard_runner(
-            shard,
-            botconfig.clone()
-        )));
+        tasks.push(tokio::spawn(shard_runner(shard, botconfig.clone())));
     }
 
     signal::ctrl_c().await?;
