@@ -4,6 +4,7 @@ use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 use twilight_http::response::DeserializeBodyError;
 use twilight_model::{
+    gateway::payload::incoming::MemberAdd,
     guild::Member,
     id::{
         marker::{RoleMarker, UserMarker},
@@ -12,9 +13,7 @@ use twilight_model::{
 };
 
 use crate::{
-    database::{
-        get_linked_users_by_ids, update_linked_user, DatabaseError,
-    },
+    database::{get_linked_user, get_linked_users_by_ids, update_linked_user, DatabaseError},
     ShardData,
 };
 
@@ -487,10 +486,25 @@ pub async fn update_igns(data: &ShardData) -> Result<(), UpdateIgnsError> {
 
     tracing::info!("Checking IGNs for {} users.", linked_users.len());
 
+    let mut safety = 0;
     for user in linked_users {
         tracing::info!("Checking IGN for user {}.", user.id);
         let uuid = user.uuid.ok_or(UpdateIgnsError::InvalidDbUser(user.id))?;
-        let mc = get_user_ign(&data.reqwest_client, &uuid).await?;
+        let mc = match get_user_ign(&data.reqwest_client, &uuid).await {
+            Ok(mc) => mc,
+            Err(e) => {
+                if safety > 5 {
+                    return Err(e.into());
+                }
+                tracing::error!(
+                    "Error whle checking IGN for user {}. Error: {}.",
+                    user.id,
+                    e
+                );
+                safety += 1;
+                continue;
+            }
+        };
         if user.ign.is_none() || mc.name != user.ign.unwrap() {
             tracing::info!(
                 "Updating IGN for user `{}`. New IGN: `{}`.",
@@ -577,6 +591,35 @@ pub async fn update_loop(data: Arc<ShardData>) {
             if i != 3 {
                 tokio::time::sleep(Duration::from_secs(1800)).await;
             }
+        }
+    }
+}
+
+pub async fn handle_member_add(event: Box<MemberAdd>, data: Arc<ShardData>) {
+    let user_id = event.user.id;
+    let user_id_i64 = match user_id.get().try_into() {
+        Ok(id) => id,
+        Err(e) => {
+            tracing::error!("User id cannot be converted to i64: {}", e);
+            return;
+        }
+    };
+    let guild_id = event.guild_id;
+
+    if let Some(user) = match get_linked_user(&data.pool, user_id_i64).await {
+        Ok(user) => user,
+        Err(e) => {
+            tracing::error!("Error fetching database: {}", e);
+            return;
+        }
+    } {
+        if user.ign.is_some() {
+            _ = data
+                .client
+                .add_guild_member_role(guild_id, user_id, data.config.verified_role_id)
+                .await;
+        } else {
+            tracing::error!("User with id {} has an invalid linking status.", user_id);
         }
     }
 }

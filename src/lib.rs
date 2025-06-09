@@ -1,7 +1,7 @@
 use commands::{handle_interaction, handle_legacy_command, CommandCooldownList};
 use config::BotConfig;
 use database::{create_connection_pool, Pool, PoolCreationError};
-use minecraft::{update_loop, HypixelAPI};
+use minecraft::{handle_member_add, update_loop, HypixelAPI};
 use std::{
     error::Error,
     sync::{
@@ -143,6 +143,7 @@ async fn handle_event(
         }
         Event::MessageCreate(msg) => handle_legacy_command(msg, data).await,
         Event::InteractionCreate(interaction) => handle_interaction(interaction, data).await,
+        Event::MemberAdd(member_add) => handle_member_add(member_add, data).await,
         // Other events here...
         _ => {}
     }
